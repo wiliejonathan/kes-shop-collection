@@ -195,4 +195,31 @@ const dbg = JSON.parse(fs.readFileSync('scrape-debug.json','utf8'));
 dbg.corsProbe = corsProbe;
 fs.writeFileSync('scrape-debug.json', JSON.stringify(dbg,null,2));
 console.log('CORS probe', corsProbe);
+let siteQa = { ok: false, viewports: [] };
+try {
+  const testPage = await context.newPage();
+  const html = fs.readFileSync('index.html','utf8');
+  await testPage.setContent(html, { waitUntil: 'domcontentloaded', timeout: 30000 });
+  await testPage.waitForFunction(() => Number(document.getElementById('heroCount')?.textContent || 0) >= 372, null, { timeout: 20000 });
+  const sizes = [{w:320,h:800},{w:600,h:1000},{w:900,h:1100},{w:1440,h:1100}];
+  for (const v of sizes) {
+    await testPage.setViewportSize({width:v.w,height:v.h});
+    await testPage.waitForTimeout(250);
+    const m = await testPage.evaluate(() => ({
+      width: innerWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+      cards: document.querySelectorAll('#grid .card').length,
+      heroCount: document.getElementById('heroCount')?.textContent,
+      visibleCount: document.getElementById('visibleCount')?.textContent,
+      sync: document.getElementById('syncStatus')?.textContent
+    }));
+    siteQa.viewports.push({...m,noHorizontalOverflow:m.scrollWidth <= m.width + 1});
+  }
+  siteQa.ok = siteQa.viewports.every(v => v.cards > 0 && v.heroCount === '372' && v.noHorizontalOverflow);
+  await testPage.close();
+} catch (e) { siteQa = {ok:false,error:String(e),viewports:siteQa.viewports||[]}; }
+const dbg2 = JSON.parse(fs.readFileSync('scrape-debug.json','utf8'));
+dbg2.siteQa = siteQa;
+fs.writeFileSync('scrape-debug.json', JSON.stringify(dbg2,null,2));
+console.log('SITE QA', siteQa);
 await browser.close();
