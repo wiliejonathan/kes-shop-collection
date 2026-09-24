@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-24T07:16:57.589Z",
+  "generatedAt": "2026-09-24T07:18:17.148Z",
   "target": "https://collshp.com/kesynaftalia?utm_source=ig&utm_medium=social&utm_content=link_in_bio",
   "navError": null,
   "finalUrl": "https://collshp.com/kesynaftalia?utm_source=ig&utm_medium=social&utm_content=link_in_bio",
@@ -68,5 +68,46 @@
     "ok": true,
     "status": 200,
     "totalCount": 372
+  },
+  "siteQa": {
+    "ok": true,
+    "viewports": [
+      {
+        "width": 320,
+        "scrollWidth": 320,
+        "cards": 48,
+        "heroCount": "372",
+        "visibleCount": "372",
+        "sync": "Memeriksa update Shopee…",
+        "noHorizontalOverflow": true
+      },
+      {
+        "width": 600,
+        "scrollWidth": 600,
+        "cards": 48,
+        "heroCount": "372",
+        "visibleCount": "372",
+        "sync": "Memeriksa update Shopee…",
+        "noHorizontalOverflow": true
+      },
+      {
+        "width": 900,
+        "scrollWidth": 900,
+        "cards": 48,
+        "heroCount": "372",
+        "visibleCount": "372",
+        "sync": "Memeriksa update Shopee…",
+        "noHorizontalOverflow": true
+      },
+      {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "cards": 48,
+        "heroCount": "372",
+        "visibleCount": "372",
+        "sync": "Memeriksa update Shopee…",
+        "noHorizontalOverflow": true
+      }
+    ]
   }
 }
