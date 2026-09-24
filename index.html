@@ -233,10 +233,10 @@ footer{padding:26px clamp(18px,4vw,56px) 42px;text-align:center;color:#9c8793;fo
   function filtered(){
     const q=query.trim().toLowerCase();
     let arr=products.filter(p=>(category==='ALL'||p.category===category)&&(!q||String(p.name).toLowerCase().includes(q)));
-    if(sortMode==='oldest')arr.sort((a,b)=>a.order-b.order);
+    if(sortMode==='oldest')arr.sort((a,b)=>b.order-a.order);
     else if(sortMode==='az')arr.sort((a,b)=>a.name.localeCompare(b.name,'id'));
     else if(sortMode==='za')arr.sort((a,b)=>b.name.localeCompare(a.name,'id'));
-    else arr.sort((a,b)=>b.order-a.order);
+    else arr.sort((a,b)=>a.order-b.order);
     return arr;
   }
 
