@@ -201,6 +201,8 @@ footer{padding:26px clamp(18px,4vw,56px) 42px;text-align:center;color:#9c8793;fo
 
   function normalizeItem(item,index){
     const p={order:Number(item.order||index+1),linkId:String(item.linkId||''),name:item.name||item.linkName||'Produk Shopee',image:item.image||'',url:item.url||item.link||'',linkType:item.linkType||'ITEM',groupIds:Array.isArray(item.groupIds)?item.groupIds:[]};
+    const m=String(p.name||'').match(/^\s*#\s*(\d+)/);
+    p.productNumber=m?Number(m[1]):0;
     p.category=inferCategory(p.name);
     return p;
   }
@@ -233,10 +235,10 @@ footer{padding:26px clamp(18px,4vw,56px) 42px;text-align:center;color:#9c8793;fo
   function filtered(){
     const q=query.trim().toLowerCase();
     let arr=products.filter(p=>(category==='ALL'||p.category===category)&&(!q||String(p.name).toLowerCase().includes(q)));
-    if(sortMode==='oldest')arr.sort((a,b)=>b.order-a.order);
+    if(sortMode==='oldest')arr.sort((a,b)=>(a.productNumber||Number.MAX_SAFE_INTEGER)-(b.productNumber||Number.MAX_SAFE_INTEGER) || b.order-a.order);
     else if(sortMode==='az')arr.sort((a,b)=>a.name.localeCompare(b.name,'id'));
     else if(sortMode==='za')arr.sort((a,b)=>b.name.localeCompare(a.name,'id'));
-    else arr.sort((a,b)=>a.order-b.order);
+    else arr.sort((a,b)=>(b.productNumber||-1)-(a.productNumber||-1) || a.order-b.order);
     return arr;
   }
 
