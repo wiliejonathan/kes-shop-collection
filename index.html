@@ -3,6 +3,26 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<script>
+(() => {
+  try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch {}
+  const isFreshEntry = () => {
+    const nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+    return !location.hash && (!nav || nav.type === 'navigate' || nav.type === 'reload');
+  };
+  const forceTop = () => {
+    if (!isFreshEntry()) return;
+    window.scrollTo(0, 0);
+    requestAnimationFrame(() => window.scrollTo(0, 0));
+    setTimeout(() => window.scrollTo(0, 0), 80);
+    setTimeout(() => window.scrollTo(0, 0), 260);
+  };
+  forceTop();
+  window.addEventListener('DOMContentLoaded', forceTop, { once: true });
+  window.addEventListener('load', forceTop, { once: true });
+  window.addEventListener('pageshow', (event) => { if (!event.persisted) forceTop(); });
+})();
+</script>
 <meta name="theme-color" content="#fff7fb">
 <meta name="description" content="Kes'Shop Collection — Korean & casual outfit, daily wear for girls.">
 <title>Kes'Shop Collection</title>
