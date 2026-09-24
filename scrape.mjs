@@ -173,4 +173,26 @@ if (output.expectedCount && output.count !== output.expectedCount) {
   throw new Error(`Incomplete scrape: expected ${output.expectedCount}, got ${output.count}`);
 }
 
+let corsProbe = { ok: false };
+try {
+  const probePage = await context.newPage();
+  await probePage.goto('https://example.com', { waitUntil: 'domcontentloaded', timeout: 30000 });
+  corsProbe = await probePage.evaluate(async () => {
+    const query = 'query getLinkLists($urlSuffix: String!, $pageSize: String, $pageNum: String, $groupId: String, $linkNameKeyword: String) { landingPageLinkList(urlSuffix: $urlSuffix, pageSize: $pageSize, pageNum: $pageNum, groupId: $groupId, linkNameKeyword: $linkNameKeyword) { totalCount linkList { linkId link linkName image linkType groupIds } } }';
+    try {
+      const r = await fetch('https://collshp.com/api/v3/gql/graphql', {
+        method:'POST', mode:'cors',
+        headers:{'accept':'application/json, text/plain, */*','content-type':'application/json;charset=UTF-8'},
+        body: JSON.stringify({operationName:'getLinkLists',query,variables:{urlSuffix:'kesynaftalia',pageSize:'1',pageNum:'1'}})
+      });
+      const j = await r.json();
+      return {ok:r.ok,status:r.status,totalCount:j?.data?.landingPageLinkList?.totalCount||0};
+    } catch (e) { return {ok:false,error:String(e)}; }
+  });
+  await probePage.close();
+} catch (e) { corsProbe = {ok:false,error:String(e)}; }
+const dbg = JSON.parse(fs.readFileSync('scrape-debug.json','utf8'));
+dbg.corsProbe = corsProbe;
+fs.writeFileSync('scrape-debug.json', JSON.stringify(dbg,null,2));
+console.log('CORS probe', corsProbe);
 await browser.close();
