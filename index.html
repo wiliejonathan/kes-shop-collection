@@ -71,7 +71,7 @@ main{padding:8px clamp(14px,3.5vw,52px) 50px}.section-head{display:flex;justify-
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 7px 24px rgba(104,74,89,.07);display:flex;flex-direction:column;min-width:0;transition:.22s transform,.22s box-shadow}.card:hover{transform:translateY(-3px);box-shadow:0 14px 32px rgba(104,74,89,.12)}
 .pic{position:relative;aspect-ratio:1/1;background:linear-gradient(145deg,#fff0f5,#f3ecfb);overflow:hidden}.pic img{width:100%;height:100%;object-fit:cover;display:block;transition:.35s transform}.card:hover .pic img{transform:scale(1.025)}.num{position:absolute;left:9px;top:9px;font-size:10px;font-weight:800;color:#694f5c;background:rgba(255,255,255,.84);padding:6px 8px;border-radius:999px;backdrop-filter:blur(8px)}
 .body{padding:11px;display:flex;flex-direction:column;gap:9px;flex:1}.title{font-size:12px;line-height:1.45;font-weight:720;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;min-height:52px;word-break:break-word}.buy{margin-top:auto;width:100%;border:0;border-radius:12px;padding:10px 9px;background:linear-gradient(135deg,#f29ab6,#e681a4);color:white;text-decoration:none;text-align:center;font-size:11px;font-weight:850;box-shadow:0 7px 16px rgba(214,111,149,.19)}
-.empty{grid-column:1/-1;text-align:center;padding:70px 20px;color:var(--muted)}.load-more{display:block;margin:24px auto 0;border:1px solid var(--line);background:#fff;border-radius:999px;padding:11px 18px;color:#755d69;font-weight:800}
+.empty{grid-column:1/-1;text-align:center;padding:70px 20px;color:var(--muted)}.load-sentinel{height:2px;margin-top:18px;pointer-events:none}
 footer{padding:26px clamp(18px,4vw,56px) 42px;text-align:center;color:#9c8793;font-size:11px;line-height:1.7}.top-btn{position:fixed;right:16px;bottom:calc(18px + var(--safe-bottom));width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.92);box-shadow:0 8px 24px rgba(100,74,87,.14);display:none;align-items:center;justify-content:center;z-index:45}.top-btn.show{display:flex}
 
 /* Sakura blossom rain */
@@ -169,7 +169,7 @@ footer{padding:26px clamp(18px,4vw,56px) 42px;text-align:center;color:#9c8793;fo
       <div id="syncStatus" class="sync">Menyiapkan koleksi…</div>
     </div>
     <section id="grid" class="grid" aria-live="polite"></section>
-    <button id="more" class="load-more" type="button" hidden>Tampilkan lebih banyak</button>
+    <div id="loadSentinel" class="load-sentinel" aria-hidden="true"></div>
   </main>
 
   <footer>
@@ -186,7 +186,7 @@ footer{padding:26px clamp(18px,4vw,56px) 42px;text-align:center;color:#9c8793;fo
   const seed=JSON.parse(document.getElementById('seed').textContent);
   let profile=seed.profile||{}, products=Array.isArray(seed.products)?seed.products:[], category='ALL', sortMode='newest', query='', renderLimit=INITIAL_BATCH, lastSync=seed.syncedAt?new Date(seed.syncedAt):null;
 
-  const grid=document.getElementById('grid'), chips=document.getElementById('chips'), search=document.getElementById('search'), more=document.getElementById('more'),
+  const grid=document.getElementById('grid'), chips=document.getElementById('chips'), search=document.getElementById('search'), loadSentinel=document.getElementById('loadSentinel'),
     syncStatus=document.getElementById('syncStatus'), visibleCount=document.getElementById('visibleCount'), heroCount=document.getElementById('heroCount'),
     brand=document.getElementById('brand'), tagline=document.getElementById('tagline'), avatar=document.getElementById('avatar'), hero=document.getElementById('hero'),
     topBtn=document.getElementById('topBtn'), filterToggle=document.getElementById('filterToggle'), filterPanel=document.getElementById('filterPanel'),
@@ -277,8 +277,7 @@ footer{padding:26px clamp(18px,4vw,56px) 42px;text-align:center;color:#9c8793;fo
         '</div>'+
       '</article>'
     ).join('');
-    more.hidden=shown.length>=arr.length;
-    more.textContent='Tampilkan lebih banyak ('+Math.min(BATCH,Math.max(0,arr.length-shown.length))+')';
+    loadSentinel.dataset.hasMore=shown.length<arr.length?'1':'0';
   }
 
   function updateFilterBadge(){
@@ -333,7 +332,18 @@ footer{padding:26px clamp(18px,4vw,56px) 42px;text-align:center;color:#9c8793;fo
   }
 
   search.addEventListener('input',()=>{query=search.value;renderLimit=INITIAL_BATCH;render()});
-  more.addEventListener('click',()=>{renderLimit+=BATCH;render()});
+  const infiniteObserver=new IntersectionObserver(entries=>{
+    if(!entries.some(entry=>entry.isIntersecting))return;
+    if(loadSentinel.dataset.hasMore!=='1')return;
+    const total=filtered().length;
+    const nextLimit=Math.min(renderLimit+BATCH,total);
+    if(nextLimit===renderLimit)return;
+    renderLimit=nextLimit;
+    render();
+  },{root:null,rootMargin:'700px 0px 700px 0px',threshold:0});
+
+  infiniteObserver.observe(loadSentinel);
+
   filterToggle.addEventListener('click',()=>filterPanel.classList.toggle('open'));
   categorySelect.addEventListener('change',()=>{category=categorySelect.value;renderLimit=INITIAL_BATCH;rebuildCategoryUI();render();updateFilterBadge()});
   sortSelect.addEventListener('change',()=>{sortMode=sortSelect.value;renderLimit=INITIAL_BATCH;render();updateFilterBadge()});
